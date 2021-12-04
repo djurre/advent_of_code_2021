@@ -1,23 +1,15 @@
 input = File.read("input.txt", chomp: true).split("\n\n").map { |l| l.gsub("\n", " ") }
-
 numbers = input.shift.split(',').map(&:to_i)
-
-boards = {}
-input.each_with_index do |board_list, index|
-  board = board_list.split.map(&:to_i).each_slice(5).to_a
-  boards[index] = board + board.transpose
-end
+boards = input.map { |board_list| board_list.split.map(&:to_i).each_slice(5).to_a }.map { |board| board + board.transpose }
 
 def play(numbers, boards)
   winning_boards = []
   numbers.each do |number|
-    boards.each do |board_number, rows_or_columns|
-      next if winning_boards.map { |b| b[:board_number] }.include?(board_number)
-      rows_or_columns.each do |row_or_column|
+    boards.each_with_index do |board, board_number|
+      next if board.any? { |line| line.empty?}
+      board.each do |row_or_column|
         row_or_column.delete(number)
-        if row_or_column.empty?
-          winning_boards << { board_number: board_number, number: number, rows_or_columns: rows_or_columns }
-        end
+        winning_boards << { board_number: board_number, number: number } if row_or_column.empty?
       end
     end
   end
@@ -25,7 +17,5 @@ def play(numbers, boards)
 end
 
 winning_boards = play(numbers, boards)
-first_winner = winning_boards.first
-last_winner = winning_boards.last
-pp first_winner[:rows_or_columns][0..4].flatten.sum * first_winner[:number]
-pp last_winner[:rows_or_columns][0..4].flatten.sum * last_winner[:number]
+pp boards[winning_boards.first[:board_number]][0..4].flatten.sum * winning_boards.first[:number]
+pp boards[winning_boards.last[:board_number]][0..4].flatten.sum * winning_boards.last[:number]
